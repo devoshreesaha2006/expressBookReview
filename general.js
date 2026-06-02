@@ -1,113 +1,85 @@
 // general.js
-// Implements the public book APIs using async/await + Axios + Promise callbacks.
-// Used by the IBM Developing Back-End Apps with Node.js and Express final project.
+// IBM Developing Back-End Apps with Node.js and Express final project.
+// Implements the four required public book API calls with axios.
 
 const axios = require("axios");
 
-const BASE = "https://giallybookreview-3985.nodejs.tutorialsplane.com";
+const BASE_URL = "http://localhost:5000";
 
-// 1. Get all books using async/await with Axios
-async function getAllBooks() {
-  const url = `${BASE}/`;
-  try {
-    const response = await axios.get(url);
-    console.log("All books retrieved:");
-    console.log(JSON.stringify(response.data, null, 2));
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching all books:", error.message);
-    throw error;
-  }
-}
-
-// 2. Search by ISBN using Promises
-function getBooksByISBN(isbn) {
-  const url = `${BASE}/isbn/${encodeURIComponent(isbn)}`;
-  return axios
-    .get(url)
+// Task 10: Get all books using an async callback function.
+function getAllBooks(callback) {
+  axios
+    .get(`${BASE_URL}/`)
     .then((response) => {
-      console.log(`Books for ISBN ${isbn}:`);
-      console.log(JSON.stringify(response.data, null, 2));
-      return response.data;
+      callback(null, response.data);
     })
     .catch((error) => {
-      console.error(`Error fetching ISBN ${isbn}:`, error.message);
-      throw error;
+      callback(error, null);
     });
 }
 
-// 3. Search by author using async/await with Axios
+// Task 11: Search by ISBN using Promises.
+function getBookByISBN(isbn) {
+  return new Promise((resolve, reject) => {
+    axios
+      .get(`${BASE_URL}/isbn/${isbn}`)
+      .then((response) => {
+        resolve(response.data);
+      })
+      .catch((error) => {
+        reject(error);
+      });
+  });
+}
+
+// Task 12: Search by author using async/await.
 async function getBooksByAuthor(author) {
-  const url = `${BASE}/author/${encodeURIComponent(author)}`;
-  try {
-    const response = await axios.get(url);
-    console.log(`Books by author ${author}:`);
-    console.log(JSON.stringify(response.data, null, 2));
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching author ${author}:`, error.message);
-    throw error;
-  }
+  const response = await axios.get(`${BASE_URL}/author/${encodeURIComponent(author)}`);
+  return response.data;
 }
 
-// 4. Search by title using async/await with Axios
+// Task 13: Search by title using async/await.
 async function getBooksByTitle(title) {
-  const url = `${BASE}/title/${encodeURIComponent(title)}`;
-  try {
-    const response = await axios.get(url);
-    console.log(`Books with title ${title}:`);
-    console.log(JSON.stringify(response.data, null, 2));
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching title ${title}:`, error.message);
-    throw error;
-  }
-}
-
-// 5. Get the book review (initial review) using async/await with Axios
-async function getBookReview(isbn) {
-  const url = `${BASE}/review/${encodeURIComponent(isbn)}`;
-  try {
-    const response = await axios.get(url);
-    console.log(`Reviews for ISBN ${isbn}:`);
-    console.log(JSON.stringify(response.data, null, 2));
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching review for ISBN ${isbn}:`, error.message);
-    throw error;
-  }
+  const response = await axios.get(`${BASE_URL}/title/${encodeURIComponent(title)}`);
+  return response.data;
 }
 
 module.exports = {
   getAllBooks,
-  getBooksByISBN,
+  getBookByISBN,
   getBooksByAuthor,
   getBooksByTitle,
-  getBookReview,
 };
 
-// CLI runner
 if (require.main === module) {
-  (async () => {
-    const [, , cmd, arg] = process.argv;
-    switch (cmd) {
-      case "all":
-        await getAllBooks();
-        break;
-      case "isbn":
-        await getBooksByISBN(arg);
-        break;
-      case "author":
-        await getBooksByAuthor(arg);
-        break;
-      case "title":
-        await getBooksByTitle(arg);
-        break;
-      case "review":
-        await getBookReview(arg);
-        break;
-      default:
-        console.log("Usage: node general.js [all|isbn <isbn>|author <author>|title <title>|review <isbn>]");
+  getAllBooks((error, books) => {
+    if (error) {
+      console.error(error.message);
+      return;
     }
-  })();
+
+    console.log("All books:");
+    console.log(JSON.stringify(books, null, 2));
+  });
+
+  getBookByISBN("1")
+    .then((book) => {
+      console.log("Book by ISBN 1:");
+      console.log(JSON.stringify(book, null, 2));
+    })
+    .catch((error) => console.error(error.message));
+
+  getBooksByAuthor("Unknown")
+    .then((books) => {
+      console.log("Books by author Unknown:");
+      console.log(JSON.stringify(books, null, 2));
+    })
+    .catch((error) => console.error(error.message));
+
+  getBooksByTitle("Things Fall Apart")
+    .then((books) => {
+      console.log("Books by title Things Fall Apart:");
+      console.log(JSON.stringify(books, null, 2));
+    })
+    .catch((error) => console.error(error.message));
 }
